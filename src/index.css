@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: "Noto Sans Devanagari", "Mangal", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Accessibility focus rings for WCAG AA */
+  *:focus-visible {
+    outline: 2px solid #0B2A5B;
+    outline-offset: 2px;
+  }
+
+  /* Accessibility font sizing scales */
+  html.font-scale-sm {
+    font-size: 14px;
+  }
+  html.font-scale-md {
+    font-size: 16px;
+  }
+  html.font-scale-lg {
+    font-size: 18px;
+  }
+
+  /* High Contrast Mode for GIGW / UX4G compliance */
+  html.high-contrast {
+    filter: contrast(125%);
+  }
+  html.high-contrast body {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+  html.high-contrast .bg-white {
+    background-color: #0b0f19 !important;
+    color: #ffffff !important;
+    border-color: #38bdf8 !important;
+  }
+  html.high-contrast .text-slate-600,
+  html.high-contrast .text-slate-500,
+  html.high-contrast .text-slate-700 {
+    color: #e2e8f0 !important;
+  }
+  html.high-contrast .border-slate-200,
+  html.high-contrast .border-slate-300 {
+    border-color: #64748b !important;
+  }
+}
+
+/* Custom scrollbar for GovTech Portal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Ticker Marquee Animation (Pure CSS, Pauses on hover, Static on reduced motion) */
+.ticker-marquee-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.ticker-marquee-track {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll 35s linear infinite;
+}
+
+.ticker-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-marquee-track {
+    animation: none !important;
+    transform: none !important;
+    overflow-x: auto;
+  }
+}
+
+/* Critical Batch Flashing Pulse (Keyframe pulse, ~1s) */
+@keyframes pulse-critical-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.98);
+    box-shadow: 0 0 8px 3px rgba(225, 29, 72, 0.6);
+  }
+}
+
+.animate-pulse-critical {
+  animation: pulse-critical-glow 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.row-highlight-critical {
+  background-color: #fff1f2 !important;
+  border-left: 3px solid #e11d48 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-critical {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Hatched pattern for Quality Hold bays */
+.bg-hatched-hold {
+  background: repeating-linear-gradient(
+    45deg,
+    #faf5ff,
+    #faf5ff 8px,
+    #f3e8ff 8px,
+    #f3e8ff 16px
+  );
+}
+
+/* Custom visual pulse effects for Barcode / Scan */
+.barcode-scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(21, 128, 61, 0) 0%,
+    rgba(21, 128, 61, 0.8) 50%,
+    rgba(21, 128, 61, 0) 100%
+  );
+  animation: scanline 2.2s ease-in-out infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(320px); }
+}
+
+.siren-glow {
+  box-shadow: 0 0 35px rgba(185, 28, 28, 0.45);
+}
+
+.emerald-glow {
+  box-shadow: 0 0 25px rgba(21, 128, 61, 0.35);
+}
+
+/* Print Optimization for Official Form-G Delivery Challan & Guided Picking Slip */
+@media print {
+  #gov-top-accessibility-strip,
+  #gov-header,
+  #gov-navbar,
+  #gov-alert-ticker,
+  #gov-footer,
+  #handset-simulator-pane,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #main-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-challan-container {
+    box-shadow: none !important;
+    border: 1px solid #000000 !important;
+    width: 100% !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  table {
+    page-break-inside: avoid !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+}

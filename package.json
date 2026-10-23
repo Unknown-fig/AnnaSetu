@@ -1,0 +1,32 @@
+{
+  "name": "annasetu-3d-fifo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k --kill-others-on-fail -p \"[{name}]\" -n \"API,WEB\" -c \"cyan.bold,green.bold\" \"python -m uvicorn backend.main:app --port 8000 --reload\" \"vite\"",
+    "dev:backend": "python -m uvicorn backend.main:app --port 8000 --reload",
+    "dev:frontend": "vite",
+    "test:backend": "python -m pytest backend/tests -v",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "jsqr": "^1.4.0",
+    "lucide-react": "^0.453.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4",
+    "recharts": "^2.13.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^10.0.6",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10"
+  }
+}
