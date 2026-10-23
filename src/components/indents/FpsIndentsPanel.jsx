@@ -5,13 +5,13 @@ import { apiClient } from '../../services/apiClient';
 import { FAIR_PRICE_SHOPS, COMMODITIES } from '../../types/models';
 import { ClipboardList, PlusCircle, CheckCircle2, AlertCircle, ArrowRight, Clock, Store, ShieldCheck } from 'lucide-react';
 
-export function FpsIndentsPanel({ onPreFillChallan }) {
+export function FpsIndentsPanel({ onPreFillChallan, filterFpsCode }) {
   const { state, refreshServerState } = useStore();
   const { t, lang } = useI18n();
 
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedFps, setSelectedFps] = useState('FPS-GN-101');
+  const [selectedFps, setSelectedFps] = useState(filterFpsCode || 'FPS-GN-101');
   const [commodity, setCommodity] = useState('Wheat');
   const [qty, setQty] = useState('');
   const [priority, setPriority] = useState('NORMAL');
@@ -21,6 +21,7 @@ export function FpsIndentsPanel({ onPreFillChallan }) {
   const indents = state.fpsIndents || [];
 
   const filteredIndents = indents.filter((ind) => {
+    if (filterFpsCode && ind.fps_code !== filterFpsCode) return false;
     if (filterStatus === 'ALL') return true;
     return ind.status === filterStatus;
   });

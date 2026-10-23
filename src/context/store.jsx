@@ -869,6 +869,15 @@ function storeReducer(state, action) {
       };
     }
 
+    case ACTION_TYPES.RECORD_AUDIT_LOG: {
+      const newLog = action.payload;
+      const updatedLogs = [newLog, ...(state.auditLogs || [])].slice(0, MAX_IN_MEMORY_LOGS);
+      return {
+        ...state,
+        auditLogs: updatedLogs,
+      };
+    }
+
     default:
       return state;
   }

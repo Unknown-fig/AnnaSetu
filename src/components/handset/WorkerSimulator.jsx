@@ -42,6 +42,17 @@ export const WorkerSimulator = React.memo(function WorkerSimulator({ onClose }) 
   const [qrVerificationResult, setQrVerificationResult] = useState(null);
   const [copiedToken, setCopiedToken] = useState(false);
 
+  // Listen for official role handset mode switch (DSO -> Approver, Godown Manager -> Worker)
+  useEffect(() => {
+    function handleModeChange(e) {
+      if (e?.detail?.mode) {
+        setActiveRole(e.detail.mode);
+      }
+    }
+    window.addEventListener('annasetu:handset-mode-change', handleModeChange);
+    return () => window.removeEventListener('annasetu:handset-mode-change', handleModeChange);
+  }, []);
+
   // Auto-switch to Approver tab if pending approvals arrive
   const pendingApprovalsCount = (state.approvals || []).filter(a => !a.isVerified && !a.isRejected).length;
 

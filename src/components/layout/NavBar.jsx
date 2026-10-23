@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useStore } from '../../context/store';
+import { useAuth } from '../../auth/AuthContext';
 import { NetworkSwitch } from './NetworkSwitch';
 import { 
   LayoutDashboard, 
@@ -11,7 +12,8 @@ import {
   FileCheck2,
   QrCode,
   ClipboardList,
-  Server
+  Server,
+  ShieldCheck
 } from 'lucide-react';
 
 export const NavBar = React.memo(function NavBar({ activeTab, onSelectTab, exceptionsCount = 0 }) {
@@ -71,13 +73,26 @@ export const NavBar = React.memo(function NavBar({ activeTab, onSelectTab, excep
       labelKey: 'nav.exceptionsLog',
       badge: exceptionsCount > 0 ? exceptionsCount : null,
     },
+    {
+      id: 'approvals',
+      tabElementId: 'tab-approvals',
+      icon: ShieldCheck,
+      labelKey: 'nav.dsoApprovals',
+      badge: (state.approvals || []).filter(a => !a.isVerified && !a.isRejected).length || null,
+    },
   ];
+
+  const { user } = useAuth();
+  const visibleNavItems = navItems.filter((item) => {
+    if (!user || !user.allowedTabs) return true;
+    return user.allowedTabs.includes(item.id);
+  });
 
   return (
     <nav id="gov-navbar" className="bg-[#0B2A5B] text-white shadow-md select-none sticky top-[64px] z-30">
       <div className="max-w-[1920px] mx-auto px-4 flex items-center justify-between overflow-x-auto no-scrollbar gap-2">
         <div className="flex items-center space-x-1 py-0 shrink-0">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 

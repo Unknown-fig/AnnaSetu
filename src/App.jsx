@@ -31,17 +31,31 @@ import {
   BellOff,
   ClipboardList,
   ArrowRight,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import { LoginScreen } from './auth/LoginScreen';
+import { OfficerTopBar } from './auth/OfficerTopBar';
+import { DsoApprovalsView } from './components/approvals/DsoApprovalsView';
 
 function GodownCommandCenter({ demoTrigger }) {
   const { state, refreshServerState } = useStore();
   const { t, isHindi } = useI18n();
-  const [activeTab, setActiveTab] = useState('challan'); // Default on Challan for instant FIFO demo
+  const { user } = useAuth();
+
+  const [activeTab, setActiveTab] = useState(() => user?.landingTab || 'dashboard');
   const [handsetVisible, setHandsetVisible] = useState(true);
   const [preFillChallanData, setPreFillChallanData] = useState(null);
   const [incomingIndentToast, setIncomingIndentToast] = useState(null);
   const [isChimeMuted, setIsChimeMuted] = useState(false);
+
+  // Route guard: ensure active tab is allowed for current role; otherwise redirect to role landingTab
+  useEffect(() => {
+    if (user && user.allowedTabs && !user.allowedTabs.includes(activeTab)) {
+      setActiveTab(user.landingTab);
+    }
+  }, [user, activeTab]);
 
   const prevPendingCountRef = useRef(null);
 
@@ -225,6 +239,16 @@ function GodownCommandCenter({ demoTrigger }) {
           {/* Tab 1: Dashboard (डैशबोर्ड) */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
+              {user?.key === 'DSO' && (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg flex items-center gap-2 text-xs font-bold text-amber-900 shadow-xs">
+                  <ShieldCheck className="h-4 w-4 text-amber-700 shrink-0" />
+                  <span>
+                    {isHindi 
+                      ? 'डीएसओ सतर्कता मोड: जनपद खाद्यान्न आवंटन एवं वैधानिक FIFO स्थिति का केवल-पठन (Read-Only) निरीक्षण।' 
+                      : 'DSO Vigilance Mode: Read-only district stock allocation & statutory FIFO monitoring.'}
+                  </span>
+                </div>
+              )}
               <KpiCards />
               <AgeingRadar onNavigateToChallan={handleNavigateToChallan} />
               <StockCharts />
@@ -267,7 +291,10 @@ function GodownCommandCenter({ demoTrigger }) {
           {/* Tab 6: FPS Indents (FPS मांगपत्र) */}
           {activeTab === 'indents' && (
             <div className="space-y-4">
-              <FpsIndentsPanel onPreFillChallan={handlePreFillChallan} />
+              <FpsIndentsPanel 
+                onPreFillChallan={handlePreFillChallan} 
+                filterFpsCode={user?.key === 'FPS_DEALER' ? 'FPS-GN-101' : null}
+              />
               <KpiCards />
             </div>
           )}
@@ -284,6 +311,17 @@ function GodownCommandCenter({ demoTrigger }) {
           {activeTab === 'exceptions' && (
             <div className="space-y-4">
               <ExceptionsLog />
+              <KpiCards />
+            </div>
+          )}
+
+          {/* Tab 9: DSO Approvals (डीएसओ अनुमोदन) */}
+          {activeTab === 'approvals' && (
+            <div className="space-y-4">
+              <DsoApprovalsView 
+                onNavigateToExceptions={() => setActiveTab('exceptions')}
+                onNavigateToTraceability={() => setActiveTab('traceability')}
+              />
               <KpiCards />
             </div>
           )}
@@ -316,7 +354,8 @@ function GodownCommandCenter({ demoTrigger }) {
   );
 }
 
-export default function App() {
+function AppShell() {
+  const { user } = useAuth();
   const [demoState, setDemoState] = useState(null);
 
   const demoTrigger = useMemo(() => ({
@@ -324,44 +363,66 @@ export default function App() {
     set: setDemoState,
   }), [demoState]);
 
+  // If no active officer session exists, enforce e-Pramaan SSO login gate
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* 0. SSO Persistent Officer Top Bar */}
+      <OfficerTopBar />
+
+      {/* Slim, prominent Portal Switcher bar at the very top of BOTH portals */}
+      <PortalSwitcher />
+
+      {/* Core Application Routes */}
+      <div className="flex-1 flex flex-col">
+        <Routes>
+          {/* Route 1: AnnaSetu Godown Portal */}
+          <Route
+            path="/godown"
+            element={<GodownCommandCenter demoTrigger={demoTrigger} />}
+          />
+
+          {/* Route 2: NFSA / e-PDS Fair Price Shop & State Monitoring Portal */}
+          <Route
+            path="/nfsa-fps"
+            element={<NfsaApp />}
+          />
+
+          {/* Route 3: /login redirect when already authenticated */}
+          <Route
+            path="/login"
+            element={<Navigate to="/godown" replace />}
+          />
+
+          {/* Root Redirect: "/" redirects to "/godown" */}
+          <Route
+            path="/"
+            element={<Navigate to="/godown" replace />}
+          />
+
+          {/* Catch-all Redirect */}
+          <Route
+            path="*"
+            element={<Navigate to="/godown" replace />}
+          />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <StoreProvider>
       <I18nProvider>
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen">
-            {/* Slim, prominent Portal Switcher bar at the very top of BOTH portals */}
-            <PortalSwitcher />
-
-            {/* Core Application Routes */}
-            <div className="flex-1 flex flex-col">
-              <Routes>
-                {/* Route 1: AnnaSetu Godown Portal */}
-                <Route
-                  path="/godown"
-                  element={<GodownCommandCenter demoTrigger={demoTrigger} />}
-                />
-
-                {/* Route 2: NFSA / e-PDS Fair Price Shop & State Monitoring Portal */}
-                <Route
-                  path="/nfsa-fps"
-                  element={<NfsaApp />}
-                />
-
-                {/* Root Redirect: "/" redirects to "/godown" */}
-                <Route
-                  path="/"
-                  element={<Navigate to="/godown" replace />}
-                />
-
-                {/* Catch-all Redirect */}
-                <Route
-                  path="*"
-                  element={<Navigate to="/godown" replace />}
-                />
-              </Routes>
-            </div>
-          </div>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </AuthProvider>
       </I18nProvider>
     </StoreProvider>
   );
