@@ -153,11 +153,11 @@ export const PrintableChallan = React.memo(function PrintableChallan({
             </div>
 
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">
-              Department of Food & Civil Supplies, Government of Uttar Pradesh
+              Department of Food & Public Distribution, Government of India
             </h2>
             {isHi && (
               <h3 className="text-xs font-semibold text-slate-600">
-                खाद्य एवं रसद विभाग, उत्तर प्रदेश सरकार
+                खाद्य एवं सार्वजनिक वितरण विभाग, भारत सरकार
               </h3>
             )}
 

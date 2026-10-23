@@ -360,7 +360,7 @@ export const ExceptionGate = React.memo(function ExceptionGate({
             </div>
             <div>
               <div className="text-[10px] font-mono uppercase tracking-wider text-red-200">
-                UTTAR PRADESH FOOD & CIVIL SUPPLIES DEPARTMENT • STATUTORY SKIP AUDIT GATE
+                GOVERNMENT OF INDIA • FOOD & PUBLIC DISTRIBUTION • STATUTORY SKIP AUDIT GATE
               </div>
               <h3 className="text-base font-extrabold uppercase tracking-wide flex items-center gap-2">
                 <span>FIFO VIOLATION DETECTED — DUAL-OTP APPROVAL MANDATORY</span>

@@ -797,7 +797,7 @@ export const GateScanner = React.memo(function GateScanner() {
             <div className="p-6 flex-1 overflow-y-auto space-y-4 print:p-0">
               <div className="text-center border-b pb-3 no-print">
                 <h4 className="text-xs font-bold text-slate-700 uppercase">
-                  Government of Uttar Pradesh • Department of Food & Civil Supplies
+                  Government of India • Department of Food & Public Distribution
                 </h4>
                 <p className="text-[11px] text-slate-500">
                   Surajpur Central Godown — Pallet & Stack Identification QR Tags

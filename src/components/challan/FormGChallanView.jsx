@@ -126,19 +126,19 @@ export const FormGChallanView = React.memo(function FormGChallanView({ challan, 
         {/* Subtle Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none">
           <div className="text-8xl font-black font-serif text-slate-900 text-center uppercase tracking-widest rotate-[-25deg]">
-            GOVERNMENT OF UTTAR PRADESH • FOOD & CIVIL SUPPLIES
+            GOVERNMENT OF INDIA • FOOD & PUBLIC DISTRIBUTION
           </div>
         </div>
 
         {/* Official Header */}
         <div className="border-b-2 border-slate-900 pb-4 text-center space-y-1 relative">
           <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 mb-1">
-            <span>DEPARTMENT OF FOOD & CIVIL SUPPLIES, UP</span>
+            <span>DEPARTMENT OF FOOD & PUBLIC DISTRIBUTION, GOVT OF INDIA</span>
             <span className="font-bold text-[#b91c1c]">FORM-G (e-PDS RULE 14-B)</span>
           </div>
 
           <h2 className="text-lg sm:text-xl font-extrabold uppercase tracking-tight text-[#1e3a8a] font-serif">
-            उत्तर प्रदेश सरकार — खाद्य तथा रसद विभाग
+            भारत सरकार — खाद्य एवं सार्वजनिक वितरण विभाग
           </h2>
           <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide">
             OFFICIAL PDS COMMODITY DELIVERY CHALLAN & GODOWN GATE PASS

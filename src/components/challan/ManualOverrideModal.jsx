@@ -54,7 +54,7 @@ export const ManualOverrideModal = React.memo(function ManualOverrideModal({
             </div>
             <div>
               <div className="text-[10px] font-mono uppercase tracking-wider text-red-200">
-                UTTAR PRADESH FOOD & CIVIL SUPPLIES DEPARTMENT • STATUTORY OVERRIDE
+                GOVERNMENT OF INDIA • FOOD & PUBLIC DISTRIBUTION • STATUTORY OVERRIDE
               </div>
               <h3 className="text-base font-extrabold uppercase tracking-wide flex items-center gap-2">
                 <span>{t('override.alertTitle')}</span>
@@ -87,7 +87,7 @@ export const ManualOverrideModal = React.memo(function ManualOverrideModal({
               Statutory PDS Control Notice:
             </p>
             <p className="text-[11px] text-slate-600 leading-normal">
-              Under Uttar Pradesh Food & Civil Supplies Department PDS guidelines, dispatching newer stock out-of-turn is strictly prohibited to prevent stock deterioration. To proceed, an <strong>Approved Exception Form</strong> must be executed by an authorized gazetted/supervisory officer.
+              Under Government of India Food & Public Distribution PDS guidelines, dispatching newer stock out-of-turn is strictly prohibited to prevent stock deterioration. To proceed, an <strong>Approved Exception Form</strong> must be executed by an authorized gazetted/supervisory officer.
             </p>
           </div>
 

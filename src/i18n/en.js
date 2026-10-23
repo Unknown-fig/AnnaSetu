@@ -14,7 +14,7 @@ export const en = {
 
   // Gov Header
   header: {
-    dept: "Department of Food & Civil Supplies, Government of Uttar Pradesh",
+    dept: "Department of Food & Public Distribution, Government of India",
     title: "AnnaSetu 3D - iPDS Stock & FIFO Management, Gautam Buddha Nagar",
     godownBadge: "Surajpur Central iPDS Godown",
     prototypeBadge: "PROTOTYPE - DEMO DATA",
@@ -263,7 +263,7 @@ export const en = {
   // NFSA / FPS Portal
   nfsa: {
     portalTitle: "National Food Security Act (NFSA) - e-PDS Fair Price Shop Portal",
-    portalSubtitle: "Department of Food & Civil Supplies, Uttar Pradesh",
+    portalSubtitle: "Department of Food & Public Distribution, Government of India",
     switcherGodown: "AnnaSetu Godown",
     switcherNfsa: "NFSA / FPS Portal",
     openNewWindow: "Open in new window",
@@ -289,7 +289,7 @@ export const en = {
   },
   auth: {
     portalTitle: "AnnaSetu & NFSA Integrated Supply Chain Portal (iPDS)",
-    portalSubtitle: "Department of Food & Civil Supplies, Government of Uttar Pradesh",
+    portalSubtitle: "Department of Food & Public Distribution, Government of India",
     badgeSso: "Secured by NIC e-Pramaan SSO",
     badgeKyc: "Aadhaar e-KYC Enabled",
     badgeIso: "ISO 27001 Certified",

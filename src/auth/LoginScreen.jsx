@@ -182,10 +182,10 @@ export function LoginScreen({ onLoginSuccess }) {
               <EmblemPlaceholder className="h-14 w-14 shrink-0" />
               <div>
                 <div className="text-[13px] font-semibold text-gray-700 uppercase tracking-wide leading-tight">
-                  उत्तर प्रदेश सरकार / Government of Uttar Pradesh
+                  {isHindi ? 'भारत सरकार / Government of India' : 'Government of India / भारत सरकार'}
                 </div>
                 <div className="text-[18px] font-bold text-[#0B2A5B] leading-tight">
-                  {isHindi ? 'खाद्य तथा रसद विभाग' : 'Department of Food & Civil Supplies'}
+                  {isHindi ? 'खाद्य एवं सार्वजनिक वितरण विभाग' : 'Department of Food & Public Distribution'}
                 </div>
               </div>
             </div>

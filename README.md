@@ -152,7 +152,7 @@ Follow these 3 simple steps to see the entire system in action:
 
 ## 🌟 Phase 2 Additions: GovTech Portal & Physical Godown Management
 
-Phase 2 builds upon Phase 1 with a full Government of Uttar Pradesh portal redesign and 3 major operational capabilities:
+Phase 2 builds upon Phase 1 with a full Government of India portal redesign and 3 major operational capabilities:
 
 1. **Bilingual NIC GovTech Shell (English / हिन्दी)**
    - Top 6px Tricolor Strip (`#FF9933` Saffron / White / `#138808` Green).
@@ -259,7 +259,7 @@ Follow these 4 steps to test and demonstrate all Phase 3 capabilities:
 ### Demo Step 2: Printable Challan & Guided Bay Picking Slip
 1. In the **Delivery Challan** tab, click **"Generate Challan & Guided Picking Slip"** (or the blue top button).
 2. The print-ready A4 preview opens with:
-   - **Page 1: Delivery Challan** featuring Uttar Pradesh Government header, Challan No `GBN-iPDS-2026-0001`, FPS Kasna Village Market, allocation table, FIFO status `COMPLIANT`, signature blocks, and offline Master QR code with the first 12 characters of the SHA-256 hash.
+   - **Page 1: Delivery Challan** featuring Government of India header, Challan No `GBN-iPDS-2026-0001`, FPS Kasna Village Market, allocation table, FIFO status `COMPLIANT`, signature blocks, and offline Master QR code with the first 12 characters of the SHA-256 hash.
    - **Page 2: Guided Bay Picking Slip** featuring ordered pick list, mini bay floorplan highlighting pick bays (A2 and A3), stack warnings, checkboxes, and individual Line QR codes.
 3. Check the **"Print bilingual (English + हिंदी)"** checkbox: observe side-by-side bilingual headings throughout both pages.
 4. Click **"Back to Portal"**.
@@ -666,6 +666,6 @@ python -m pytest backend/tests -v
 - `test_sync_and_atomicity.py` (3 tests): Dual-OTP 3-attempt lockout and expiry, atomic dispatch transaction with rollback on failure, offline sync queue replay and conflict handling.
 - `test_nfsa_and_fps.py` (6 tests): Monotonic state version incrementing, NFSA Fair Price Shop dashboards with low-stock alerts, duplicate pending indent validation, e-PoS delivery receipt confirmation happy path/idempotency, tamper rejection, and District Supply Officer (DSO) vigilance reconciliation matrix (`backend/routes/fps_routes.py`).
 
-*AnnaSetu 3D — Developed for Department of Food & Civil Supplies, Government of Uttar Pradesh.*
+*AnnaSetu 3D — Developed for Department of Food & Public Distribution, Government of India.*
 
 

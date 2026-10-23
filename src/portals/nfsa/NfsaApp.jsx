@@ -76,7 +76,7 @@ export function NfsaApp() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                  {isHindi ? 'खाद्य एवं रसद विभाग • उत्तर प्रदेश' : 'Department of Food & Civil Supplies • UP'}
+                  {isHindi ? 'खाद्य एवं सार्वजनिक वितरण विभाग • भारत सरकार' : 'Department of Food & Public Distribution • Govt of India'}
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
                   PROTOTYPE - DEMO DATA
@@ -289,8 +289,8 @@ export function NfsaApp() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
             {isHindi 
-              ? 'खाद्य तथा रसद विभाग, उत्तर प्रदेश सरकार • ई-पीडीएस पारदर्शिता एवं आपूर्ति शृंखला प्रबंधन'
-              : 'Food & Civil Supplies Department, Government of Uttar Pradesh • e-PDS Transparency & Supply Chain System'}
+              ? 'खाद्य एवं सार्वजनिक वितरण विभाग, भारत सरकार • ई-पीडीएस पारदर्शिता एवं आपूर्ति शृंखला प्रबंधन'
+              : 'Department of Food & Public Distribution, Government of India • e-PDS Transparency & Supply Chain System'}
           </span>
           <span className="font-mono text-[11px] text-slate-500">
             NFSA e-PDS Portal v2.0 • Secured with SHA-256 Token Chains

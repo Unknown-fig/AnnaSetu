@@ -81,7 +81,7 @@ export const Header = React.memo(function Header({
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-0.5">
               <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5 text-amber-600" />
-                खाद्य तथा रसद विभाग, उत्तर प्रदेश
+                खाद्य एवं सार्वजनिक वितरण विभाग, भारत सरकार
               </span>
               <span className="text-slate-400">•</span>
               <span className="text-slate-600 font-medium">

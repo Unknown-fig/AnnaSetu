@@ -20,7 +20,7 @@ export const Footer = React.memo(function Footer() {
                 ANNA-SETU | e-PDS Smart Godown Portal
               </span>
               <span className="text-[11px] text-slate-400">
-                Department of Food & Civil Supplies, Government of Uttar Pradesh
+                Department of Food & Public Distribution, Government of India
               </span>
             </div>
           </div>
