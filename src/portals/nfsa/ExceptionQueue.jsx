@@ -1,30 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, CheckCircle2, XCircle, Clock, AlertTriangle, Key, Copy, Check } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Clock, AlertTriangle, Key, Copy, Check, RefreshCw } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { useI18n } from '../../i18n/I18nContext';
 
 export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
   const { isHindi } = useI18n();
 
-  const [revealedOtps, setRevealedOtps] = useState({}); // { [excId]: otpCode }
+  const [revealedOtps, setRevealedOtps] = useState({}); // { [excId]: otpCode | { [role]: otpCode } }
   const [copiedId, setCopiedId] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [rejectModalExc, setRejectModalExc] = useState(null);
   const [rejectRemarks, setRejectRemarks] = useState('');
+  const [countdowns, setCountdowns] = useState({});
+
+  // Sync and manage live countdowns for exception TTLs
+  useEffect(() => {
+    const initial = {};
+    exceptions.forEach((exc) => {
+      initial[exc.id] = exc.expires_in_seconds !== undefined ? exc.expires_in_seconds : 120;
+    });
+    setCountdowns(initial);
+
+    const timer = setInterval(() => {
+      setCountdowns((prev) => {
+        let changed = false;
+        const next = { ...prev };
+        Object.keys(next).forEach((k) => {
+          if (next[k] > 0) {
+            next[k] -= 1;
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [exceptions]);
 
   const handleApprove = async (exc) => {
     setProcessingId(exc.id);
     try {
-      // Find pending OTP request ID for this challan
-      const pendingReqs = await apiClient.getPendingApprovals();
-      const match = pendingReqs.find(p => p.challan_id === exc.id || p.challan_no === exc.challan_no);
-      const reqId = match ? match.id : exc.id;
-
-      const res = await apiClient.makeApproverDecision(reqId, 'APPROVE');
-      if (res.simulated_sms_otp) {
-        setRevealedOtps(prev => ({ ...prev, [exc.id]: res.simulated_sms_otp }));
+      // Find pending OTP request IDs for this challan (may have multiple: SUPERVISOR & DSO)
+      let pendingReqs = [];
+      try {
+        pendingReqs = await apiClient.getPendingApprovals();
+      } catch (err) {
+        console.warn('Failed to fetch pending approvals:', err);
       }
-      if (onDecisionCompleted) onDecisionCompleted();
+
+      const matches = (pendingReqs || []).filter(
+        (p) => p.challan_id === exc.id || p.challan_no === exc.challan_no
+      );
+
+      const revealed = {};
+
+      if (matches.length > 0) {
+        for (const req of matches) {
+          const res = await apiClient.makeApproverDecision(req.id, 'APPROVE');
+          const otp = res?.simulated_sms_otp || res?.simulated_otp;
+          if (otp) {
+            revealed[res.role || req.role || 'DSO'] = otp;
+          }
+        }
+      } else {
+        // Fallback: approve directly via challan ID
+        const res = await apiClient.makeApproverDecision(exc.id, 'APPROVE');
+        const otp = res?.simulated_sms_otp || res?.simulated_otp;
+        if (otp) {
+          revealed[res.role || 'DSO'] = otp;
+        }
+      }
+
+      if (Object.keys(revealed).length > 0) {
+        setRevealedOtps((prev) => ({ ...prev, [exc.id]: revealed }));
+        setCountdowns((prev) => ({ ...prev, [exc.id]: 120 }));
+      } else {
+        alert(isHindi ? 'ओटीपी जनरेट करने में असमर्थ' : 'Could not generate simulated OTP. Please try again.');
+      }
+
+      if (onDecisionCompleted) {
+        await onDecisionCompleted();
+      }
     } catch (err) {
       alert(err.message || 'Failed to approve exception');
     } finally {
@@ -37,14 +94,28 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
     setProcessingId(rejectModalExc.id);
 
     try {
-      const pendingReqs = await apiClient.getPendingApprovals();
-      const match = pendingReqs.find(p => p.challan_id === rejectModalExc.id || p.challan_no === rejectModalExc.challan_no);
-      const reqId = match ? match.id : rejectModalExc.id;
+      let pendingReqs = [];
+      try {
+        pendingReqs = await apiClient.getPendingApprovals();
+      } catch (err) {
+        console.warn('Failed to fetch pending approvals:', err);
+      }
 
-      await apiClient.makeApproverDecision(reqId, 'REJECT', rejectRemarks);
+      const matches = (pendingReqs || []).filter(
+        (p) => p.challan_id === rejectModalExc.id || p.challan_no === rejectModalExc.challan_no
+      );
+
+      if (matches.length > 0) {
+        for (const req of matches) {
+          await apiClient.makeApproverDecision(req.id, 'REJECT', rejectRemarks);
+        }
+      } else {
+        await apiClient.makeApproverDecision(rejectModalExc.id, 'REJECT', rejectRemarks);
+      }
+
       setRejectModalExc(null);
       setRejectRemarks('');
-      if (onDecisionCompleted) onDecisionCompleted();
+      if (onDecisionCompleted) await onDecisionCompleted();
     } catch (err) {
       alert(err.message || 'Failed to reject exception');
     } finally {
@@ -53,7 +124,8 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
   };
 
   const copyToClipboard = (id, text) => {
-    navigator.clipboard.writeText(text);
+    if (!text) return;
+    navigator.clipboard.writeText(String(text));
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -94,6 +166,7 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
           {exceptions.map((exc) => {
             const revealedOtp = revealedOtps[exc.id];
             const isActing = processingId === exc.id;
+            const secondsLeft = countdowns[exc.id] !== undefined ? countdowns[exc.id] : (exc.expires_in_seconds || 0);
 
             return (
               <div
@@ -114,8 +187,8 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
 
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                      <Clock className="h-3 w-3 text-amber-700 animate-spin" />
-                      <span>TTL: {exc.expires_in_seconds}s</span>
+                      <Clock className={`h-3 w-3 text-amber-700 ${secondsLeft > 0 ? 'animate-spin' : ''}`} />
+                      <span>TTL: {secondsLeft}s</span>
                     </span>
                   </div>
                 </div>
@@ -163,28 +236,69 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
                           {isHindi ? 'सिम्युलेटेड एसएमएस - केवल डेमो हेतु (Simulated SMS - Demo Only)' : 'SIMULATED SMS - Demo Only'}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded">
-                        120s Expiry
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded">
+                          {secondsLeft > 0 ? `${secondsLeft}s Remaining` : 'Expired'}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isActing}
+                          onClick={() => handleApprove(exc)}
+                          className="flex items-center gap-1 text-[10px] font-bold text-emerald-900 hover:text-emerald-950 bg-emerald-200/80 hover:bg-emerald-300 px-2 py-0.5 rounded transition-colors"
+                          title="Generate fresh OTP"
+                        >
+                          <RefreshCw className={`h-2.5 w-2.5 ${isActing ? 'animate-spin' : ''}`} />
+                          <span>{isHindi ? 'ताज़ा करें' : 'Refresh'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     <p className="text-xs text-slate-700">
-                      OTP generated server-side via cryptographic secrets. Type this OTP in the AnnaSetu Godown portal to unlock dispatch:
+                      {isHindi
+                        ? 'ओटीपी सर्वर द्वारा क्रिप्टोग्राफिक साल्ट से जनरेट किया गया है। प्रेषण अनलॉक करने के लिए इसे गोदाम पोर्टल में दर्ज करें:'
+                        : 'OTP generated server-side via cryptographic secrets. Enter in AnnaSetu Godown portal to unlock dispatch:'}
                     </p>
 
-                    <div className="flex items-center gap-3">
-                      <div className="font-mono text-2xl font-black tracking-widest text-emerald-950 bg-white px-4 py-1.5 rounded border border-emerald-300 shadow-inner">
-                        {revealedOtp}
+                    {typeof revealedOtp === 'object' && !Array.isArray(revealedOtp) ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {Object.entries(revealedOtp).map(([role, code]) => (
+                          <div key={role} className="bg-white p-3 rounded-lg border border-emerald-300 shadow-inner flex flex-col justify-between gap-2">
+                            <div>
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                                {role === 'DSO'
+                                  ? (isHindi ? 'जिला आपूर्ति अधिकारी (DSO OTP)' : 'District Supply Officer (DSO OTP)')
+                                  : (isHindi ? 'गोदाम पर्यवेक्षक (Supervisor OTP)' : 'Godown Supervisor OTP')}
+                              </span>
+                              <div className="font-mono text-2xl font-black tracking-widest text-emerald-950 mt-1">
+                                {code}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(`${exc.id}-${role}`, code)}
+                              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded transition-colors shadow-xs"
+                            >
+                              {copiedId === `${exc.id}-${role}` ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                              <span>{copiedId === `${exc.id}-${role}` ? (isHindi ? 'कॉपी हो गया' : 'Copied') : (isHindi ? 'ओटीपी कॉपी करें' : `Copy ${role} OTP`)}</span>
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(exc.id, revealedOtp)}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded transition-colors shadow-xs"
-                      >
-                        {copiedId === exc.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        <span>{copiedId === exc.id ? 'Copied' : 'Copy OTP'}</span>
-                      </button>
-                    </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="font-mono text-2xl font-black tracking-widest text-emerald-950 bg-white px-4 py-1.5 rounded border border-emerald-300 shadow-inner">
+                          {revealedOtp}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(exc.id, revealedOtp)}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded transition-colors shadow-xs"
+                        >
+                          {copiedId === exc.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          <span>{copiedId === exc.id ? 'Copied' : 'Copy OTP'}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   /* Action Buttons: Approve / Reject */
@@ -203,10 +317,20 @@ export function ExceptionQueue({ exceptions = [], onDecisionCompleted }) {
                       type="button"
                       disabled={isActing}
                       onClick={() => handleApprove(exc)}
-                      className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded shadow-xs transition-colors"
+                      className={`flex items-center gap-1.5 px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded shadow-xs transition-colors ${
+                        isActing ? 'opacity-70 cursor-wait' : ''
+                      }`}
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
-                      <span>{isHindi ? 'अनुमोदित करें और ओटीपी देखें' : 'Approve & Reveal Simulated OTP'}</span>
+                      {isActing ? (
+                        <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+                      )}
+                      <span>
+                        {isActing 
+                          ? (isHindi ? 'प्रसंस्करण...' : 'Approving...') 
+                          : (isHindi ? 'अनुमोदित करें और ओटीपी देखें' : 'Approve & Reveal Simulated OTP')}
+                      </span>
                     </button>
                   </div>
                 )}

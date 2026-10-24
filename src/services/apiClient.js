@@ -230,10 +230,16 @@ export const apiClient = {
   },
 
   async makeApproverDecision(otpRequestId, action, remarks = '') {
-    return request(`/approvals/${otpRequestId}/decision`, {
+    const res = await request(`/approvals/${otpRequestId}/decision`, {
       method: 'POST',
       body: JSON.stringify({ action, remarks }),
     });
+    broadcastInvalidation(res?.version || Date.now(), 'approver_decision');
+    return res;
+  },
+
+  async decideApproval(otpRequestId, decision, remarks = '') {
+    return this.makeApproverDecision(otpRequestId, decision, remarks);
   },
 
   // Audit Logs & Hash Chain

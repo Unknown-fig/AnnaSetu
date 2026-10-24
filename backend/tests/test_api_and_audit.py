@@ -323,3 +323,40 @@ def test_waterfall_allocation_schema(test_db):
         assert "batch_age_days" in item
         assert item["allocated_qty"] > 0
         assert item["batch_age_days"] >= 0
+
+def test_approver_decision_reveals_otp_and_refreshes_expired(test_db):
+    from backend.otp import _SIMULATED_SMS_CACHE
+    import sqlite3
+
+    # Clear memory cache to simulate server restart
+    _SIMULATED_SMS_CACHE.clear()
+
+    # Expire pending OTP request in database
+    conn = sqlite3.connect(test_db)
+    conn.execute("UPDATE otp_requests SET expires_at = '2020-01-01T00:00:00+00:00', status = 'EXPIRED'")
+    conn.commit()
+    conn.close()
+
+    # Approver makes decision to approve
+    res = client.post("/api/approvals/1/decision", json={"action": "APPROVE"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["action"] == "APPROVED"
+    assert len(data["simulated_sms_otp"]) == 6
+    assert data["simulated_sms_otp"].isdigit()
+
+    # Verify that the revealed OTP works when verified by godown operator
+    conn = sqlite3.connect(test_db)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT challan_id, role, status FROM otp_requests WHERE id = 1").fetchone()
+    challan_id = row["challan_id"]
+    role = row["role"]
+    conn.close()
+
+    v_res = client.post(
+        f"/api/challans/{challan_id}/exception/verify-otp",
+        json={"role": role, "otp": data["simulated_sms_otp"]}
+    )
+    assert v_res.status_code == 200
+    assert v_res.json()["success"] is True
