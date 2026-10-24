@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k --kill-others-on-fail -p \"[{name}]\" -n \"API,WEB\" -c \"cyan.bold,green.bold\" \"python -m uvicorn backend.main:app --port 8000 --reload\" \"vite\"",
-    "dev:backend": "python -m uvicorn backend.main:app --port 8000 --reload",
+    "dev": "concurrently -k --kill-others-on-fail -p \"[{name}]\" -n \"API,WEB\" -c \"cyan.bold,green.bold\" \"python -m uvicorn backend.main:app --port 8000 --reload --reload-dir backend --reload-exclude \\\"*.db*\\\"\" \"vite\"",
+    "dev:backend": "python -m uvicorn backend.main:app --port 8000 --reload --reload-dir backend --reload-exclude \"*.db*\"",
     "dev:frontend": "vite",
     "test:backend": "python -m pytest backend/tests -v",
     "build": "vite build",

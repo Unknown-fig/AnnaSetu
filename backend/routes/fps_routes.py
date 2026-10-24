@@ -284,66 +284,9 @@ def confirm_fps_receipt(payload: FpsConfirmReceiptRequest):
                 }
             )
 
-        # 5. Success: Execute in ONE immediate transaction
-        cursor.execute("BEGIN IMMEDIATE")
-        now_iso = datetime.now(timezone.utc).isoformat()
-
-        # Update challan status
-        cursor.execute(
-            "UPDATE delivery_challans SET status = 'RECEIVED_AT_FPS', received_at = ? WHERE id = ?",
-            (now_iso, row["id"])
-        )
-
-        # Update FPS stock inventory
-        inv = json.loads(row["stock_inventory"])
-        comm = row["commodity"]
-        current_fps_qty = float(inv.get(comm, 0.0))
-        delivered_qty = float(row["total_qty"])
-        new_fps_qty = round(current_fps_qty + delivered_qty, 2)
-        inv[comm] = new_fps_qty
-
-        cursor.execute(
-            "UPDATE fps_stores SET stock_inventory = ? WHERE id = ?",
-            (json.dumps(inv), row["fps_id"])
-        )
-
-        # If indent was linked, update indent status
-        if row["indent_id"]:
-            cursor.execute(
-                "UPDATE fps_indents SET status = 'DELIVERED_TO_FPS' WHERE id = ?",
-                (row["indent_id"],)
-            )
-
-        # Log FPS_EPOS_RECEIPT
-        log_audit_event(
-            conn,
-            "FPS_EPOS_RECEIPT",
-            {
-                "challanNo": payload.challan_no,
-                "fpsId": payload.fps_code,
-                "commodity": comm,
-                "quantity": delivered_qty,
-                "newStockBalance": new_fps_qty,
-                "receivedAt": now_iso
-            },
-            timestamp=now_iso
-        )
-
-        version_info = increment_state_version(conn)
-        conn.commit()
-
-        return {
-            "success": True,
-            "status": "RECEIVED_AT_FPS",
-            "message": f"Successfully received {delivered_qty} Qtl {comm} at {row['shop_name']} e-PoS terminal.",
-            "challan_no": payload.challan_no,
-            "fps_code": payload.fps_code,
-            "commodity": comm,
-            "quantity_received": delivered_qty,
-            "new_stock_balance": new_fps_qty,
-            "received_at": now_iso,
-            "version": version_info["version"]
-        }
+        # 5. Success: Execute in ONE immediate transaction via shared service
+        from backend.services import receive_challan_service
+        return receive_challan_service(conn, challan_no=payload.challan_no)
 
 @router.post("/api/fps/reject-receipt")
 def reject_fps_receipt(payload: FpsRejectReceiptRequest):

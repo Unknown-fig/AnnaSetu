@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Landmark, Store, ShieldCheck, Layers, FileText, Truck, 
   Globe, UserCheck, RefreshCw, AlertCircle, WifiOff 
@@ -13,14 +14,40 @@ import { useLiveState } from '../../shared/useLiveState';
 import { useI18n } from '../../i18n/I18nContext';
 
 export function NfsaApp() {
-  const { isHindi, setLanguage } = useI18n();
+  const { isHindi, setLanguage, t } = useI18n();
   const { state, refreshServerState, isConnected } = useLiveState();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [role, setRole] = useState('DEALER'); // 'DEALER' | 'DSO'
+  const initialView = searchParams.get('view') || searchParams.get('role');
+  const [role, setRole] = useState(initialView?.toUpperCase() === 'DSO' ? 'DSO' : 'DEALER');
   const [selectedFpsCode, setSelectedFpsCode] = useState('FPS-GN-101');
   const [activeTab, setActiveTab] = useState('stock'); // 'stock' | 'indents' | 'challans'
   const [fpsDashboardData, setFpsDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync role when searchParams change (e.g. browser back/forward or direct navigation)
+  useEffect(() => {
+    const v = searchParams.get('view') || searchParams.get('role');
+    if (v?.toUpperCase() === 'DSO' && role !== 'DSO') {
+      setRole('DSO');
+    } else if (v?.toUpperCase() !== 'DSO' && !v && role === 'DSO') {
+      // Keep state in sync if cleared
+    }
+  }, [searchParams]);
+
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (newRole === 'DSO') {
+        next.set('view', 'dso');
+      } else {
+        next.delete('view');
+        next.delete('role');
+      }
+      return next;
+    });
+  };
 
   // Pre-fill state for Indent Form when "Raise Indent" shortcut is clicked in StockView
   const [prefillCommodity, setPrefillCommodity] = useState('Wheat');
@@ -103,7 +130,7 @@ export function NfsaApp() {
               <div className="inline-flex rounded-md border border-slate-300 bg-slate-50 p-0.5 mt-0.5">
                 <button
                   type="button"
-                  onClick={() => setRole('DEALER')}
+                  onClick={() => handleRoleChange('DEALER')}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold transition-all ${
                     role === 'DEALER'
                       ? 'bg-[#0B2A5B] text-white shadow-xs'
@@ -115,7 +142,7 @@ export function NfsaApp() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('DSO')}
+                  onClick={() => handleRoleChange('DSO')}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold transition-all ${
                     role === 'DSO'
                       ? 'bg-amber-600 text-white shadow-xs'
@@ -165,66 +192,86 @@ export function NfsaApp() {
         </div>
       )}
 
-      {/* 3. Navy Navigation Bar (Dealer Modules) */}
-      {role === 'DEALER' && (
-        <nav className="bg-[#0B2A5B] text-white px-4 sm:px-6 shadow-xs">
-          <div className="max-w-7xl mx-auto flex items-center gap-1 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab('stock')}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
-                activeTab === 'stock'
-                  ? 'border-amber-400 text-amber-300 bg-white/5'
-                  : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Layers className="h-4 w-4" />
-              <span>{isHindi ? '1. राशन भंडार (Closing Stock)' : '1. Ration Closing Stock'}</span>
-              {fpsDashboardData?.totals?.low_stock_count > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-400 text-slate-950 font-black">
-                  {fpsDashboardData.totals.low_stock_count} LOW
-                </span>
-              )}
-            </button>
+      {/* 3. Navy Navigation Bar (Dealer & DSO Modules) */}
+      <nav className="bg-[#0B2A5B] text-white px-4 sm:px-6 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center gap-1 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('stock');
+              if (role !== 'DEALER') handleRoleChange('DEALER');
+            }}
+            className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
+              role === 'DEALER' && activeTab === 'stock'
+                ? 'border-amber-400 text-amber-300 bg-white/5'
+                : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Layers className="h-4 w-4" />
+            <span>{isHindi ? '1. राशन भंडार (Closing Stock)' : '1. Ration Closing Stock'}</span>
+            {fpsDashboardData?.totals?.low_stock_count > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-400 text-slate-950 font-black">
+                {fpsDashboardData.totals.low_stock_count} LOW
+              </span>
+            )}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('indents')}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
-                activeTab === 'indents'
-                  ? 'border-amber-400 text-amber-300 bg-white/5'
-                  : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              <span>{isHindi ? '2. मांग पत्र प्रेषित करें (Raise Indent)' : '2. Raise Commodity Indent'}</span>
-              {fpsDashboardData?.totals?.pending_indents_count > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-700 text-white font-mono">
-                  {fpsDashboardData.totals.pending_indents_count}
-                </span>
-              )}
-            </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('indents');
+              if (role !== 'DEALER') handleRoleChange('DEALER');
+            }}
+            className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
+              role === 'DEALER' && activeTab === 'indents'
+                ? 'border-amber-400 text-amber-300 bg-white/5'
+                : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>{isHindi ? '2. मांग पत्र प्रेषित करें (Raise Indent)' : '2. Raise Commodity Indent'}</span>
+            {fpsDashboardData?.totals?.pending_indents_count > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-700 text-white font-mono">
+                {fpsDashboardData.totals.pending_indents_count}
+              </span>
+            )}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('challans')}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
-                activeTab === 'challans'
-                  ? 'border-amber-400 text-amber-300 bg-white/5'
-                  : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Truck className="h-4 w-4" />
-              <span>{isHindi ? '3. आवक चालान व ई-पॉस (Delivery Challans)' : '3. Incoming Challans & e-PoS'}</span>
-              {fpsDashboardData?.incoming_challans?.length > 0 && (
-                <span className="px-2 py-0.2 rounded-full text-[10px] bg-blue-500 text-white font-bold animate-pulse">
-                  {fpsDashboardData.incoming_challans.length} IN-TRANSIT
-                </span>
-              )}
-            </button>
-          </div>
-        </nav>
-      )}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('challans');
+              if (role !== 'DEALER') handleRoleChange('DEALER');
+            }}
+            className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
+              role === 'DEALER' && activeTab === 'challans'
+                ? 'border-amber-400 text-amber-300 bg-white/5'
+                : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Truck className="h-4 w-4" />
+            <span>{isHindi ? '3. आवक चालान व ई-पॉस (Delivery Challans)' : '3. Incoming Challans & e-PoS'}</span>
+            {fpsDashboardData?.incoming_challans?.length > 0 && (
+              <span className="px-2 py-0.2 rounded-full text-[10px] bg-blue-500 text-white font-bold animate-pulse">
+                {fpsDashboardData.incoming_challans.length} IN-TRANSIT
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleRoleChange('DSO')}
+            className={`flex items-center gap-2 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
+              role === 'DSO'
+                ? 'border-amber-400 text-amber-300 bg-white/5'
+                : 'border-transparent text-slate-200 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>4. {t('nfsa.dsoVigilance')}</span>
+          </button>
+        </div>
+      </nav>
 
       {/* 4. Main Body Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5">

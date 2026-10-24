@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ExternalLink, Warehouse, Store, Activity, RefreshCw } from 'lucide-react';
+import { ExternalLink, Warehouse, Store, ShieldCheck, Activity, RefreshCw } from 'lucide-react';
 import { useLiveState } from './useLiveState';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -8,10 +8,11 @@ export function PortalSwitcher() {
   const location = useLocation();
   const navigate = useNavigate();
   const { lastUpdated, backendStatus, version, refreshServerState } = useLiveState();
-  const { isHindi } = useI18n();
+  const { isHindi, t } = useI18n();
 
   const isGodown = location.pathname.startsWith('/godown') || location.pathname === '/';
-  const isNfsa = location.pathname.startsWith('/nfsa-fps');
+  const isDso = location.pathname.startsWith('/nfsa-fps') && (location.search.toLowerCase().includes('dso'));
+  const isNfsa = location.pathname.startsWith('/nfsa-fps') && !isDso;
 
   return (
     <div className="bg-slate-900 border-b border-slate-800 text-white text-xs px-3 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xs z-50">
@@ -68,6 +69,32 @@ export function PortalSwitcher() {
             title={isHindi ? 'नई विंडो में एनएफएसए पोर्टल खोलें' : 'Open NFSA in new window'}
             className="p-1 text-slate-400 hover:text-emerald-300 hover:bg-slate-700 transition-colors ml-0.5"
             aria-label="Open NFSA Portal in new window"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        {/* 3. DSO Vigilance Console */}
+        <div className="inline-flex items-center rounded-md overflow-hidden border border-slate-700 bg-slate-800/80 p-0.5">
+          <button
+            type="button"
+            onClick={() => navigate('/nfsa-fps?view=dso')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold transition-all ${
+              isDso
+                ? 'bg-amber-600 text-white shadow-xs border border-amber-400/40'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <span>{t('nfsa.dsoVigilance')}</span>
+          </button>
+          <a
+            href="/nfsa-fps?view=dso"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={isHindi ? 'नई विंडो में सतर्कता पोर्टल खोलें' : 'Open Vigilance in new window'}
+            className="p-1 text-slate-400 hover:text-amber-300 hover:bg-slate-700 transition-colors ml-0.5"
+            aria-label="Open Vigilance Portal in new window"
           >
             <ExternalLink className="h-3 w-3" />
           </a>

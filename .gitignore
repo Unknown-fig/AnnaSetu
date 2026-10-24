@@ -3,7 +3,7 @@ node_modules/
 .venv/
 env/
 venv/
-ai-website-cloner-template/
+AGENTS.md
 
 # Production build
 dist/
@@ -41,3 +41,8 @@ yarn-error.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+.vercel
+.env*
+
+ai-website-cloner-template/

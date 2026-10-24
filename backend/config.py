@@ -3,7 +3,10 @@ from pathlib import Path
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = Path(os.getenv("DB_PATH", str(BASE_DIR / "annasetu.db")))
+if os.getenv("VERCEL"):
+    DB_PATH = Path(os.getenv("DB_PATH", "/tmp/annasetu.db"))
+else:
+    DB_PATH = Path(os.getenv("DB_PATH", str(BASE_DIR / "annasetu.db")))
 
 # Approver security configuration (single-line switch)
 REQUIRED_OTP_APPROVERS = int(os.getenv("REQUIRED_OTP_APPROVERS", "2"))

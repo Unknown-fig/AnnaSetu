@@ -1,4 +1,4 @@
-# AnnaSetu 3D
+# ANNA-SETU
 ### Gautam Buddha Nagar iPDS Smart Commodity Stock Allocation & FIFO Management System
 **Godown Location:** *Surajpur Central iPDS Godown, Greater Noida, Uttar Pradesh*  
 **Problem Statement 4:** Public Distribution System (PDS) Commodity Allocation & Strict First-In-First-Out (FIFO) Enforcer
@@ -8,13 +8,13 @@
 ## 🏛️ Executive Summary & Core Mission
 In fair price public distribution, grain spoilage, unauthorized stock rotation, and favoritism in dispatching fresher commodities over older inventory result in massive losses and lower quality rations for citizens. 
 
-**AnnaSetu 3D** is a GovTech command and warehouse dispatch platform designed for the **Surajpur Central iPDS Godown**. It mathematically enforces strict First-In-First-Out (FIFO) allocation down to individual storage bays, provides cryptographically chained SHA-256 event integrity, and features real-time synchronization between the central godown command center and a simulated rugged worker handset.
+**ANNA-SETU** is a GovTech command and warehouse dispatch platform designed for the **Surajpur Central iPDS Godown**. It mathematically enforces strict First-In-First-Out (FIFO) allocation down to individual storage bays, provides cryptographically chained SHA-256 event integrity, and features real-time synchronization between the central godown command center and a simulated rugged worker handset.
 
 ---
 
 ## 🛠️ Technology Stack
 - **Frontend Framework:** React 18 + Vite
-- **Styling & Theme:** Tailwind CSS v3 (Industrial GovTech Dark Theme: Slate-950 background, Emerald-500 FIFO Compliant, Amber-500 Ageing, Rose-600 Violation)
+- **Styling & Theme:** Tailwind CSS v3 (NIC / UX4G-style Bilingual (EN/हिन्दी) Government Portal Theme)
 - **Icons & Visuals:** `lucide-react`
 - **Analytics & Visualizations:** `recharts` (Stock distribution and age profile graphs)
 - **State Architecture:** React Context + pure `useReducer` with automatic `localStorage` synchronization
@@ -666,6 +666,6 @@ python -m pytest backend/tests -v
 - `test_sync_and_atomicity.py` (3 tests): Dual-OTP 3-attempt lockout and expiry, atomic dispatch transaction with rollback on failure, offline sync queue replay and conflict handling.
 - `test_nfsa_and_fps.py` (6 tests): Monotonic state version incrementing, NFSA Fair Price Shop dashboards with low-stock alerts, duplicate pending indent validation, e-PoS delivery receipt confirmation happy path/idempotency, tamper rejection, and District Supply Officer (DSO) vigilance reconciliation matrix (`backend/routes/fps_routes.py`).
 
-*AnnaSetu 3D — Developed for Department of Food & Public Distribution, Government of India.*
+*ANNA-SETU — Developed for Department of Food & Public Distribution, Government of India.*
 
 

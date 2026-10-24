@@ -684,64 +684,8 @@ def cancel_challan(id: int = Path(...)):
 @router.post("/{id}/receive")
 def receive_at_fps(id: int = Path(...)):
     with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM delivery_challans WHERE id = ?", (id,))
-        challan = cursor.fetchone()
-        if not challan:
-            raise HTTPException(status_code=404, detail={"error": {"code": "CHALLAN_NOT_FOUND", "message": f"Challan #{id} not found"}})
-
-        if challan["status"] != "IN_TRANSIT":
-            raise HTTPException(status_code=400, detail={"error": {"code": "INVALID_STATE", "message": f"Challan status is {challan['status']}, expected IN_TRANSIT"}})
-
-        cursor.execute("BEGIN IMMEDIATE")
-        cursor.execute("SELECT * FROM fps_stores WHERE id = ?", (challan["fps_id"],))
-        fps_store = cursor.fetchone()
-        inventory = json.loads(fps_store["stock_inventory"])
-
-        comm = challan["commodity"]
-        inventory[comm] = float(Decimal(str(inventory.get(comm, 0))) + Decimal(str(challan["total_qty"])))
-
-        now_iso = datetime.now(timezone.utc).isoformat()
-        cursor.execute(
-            "UPDATE fps_stores SET stock_inventory = ? WHERE id = ?",
-            (json.dumps(inventory), challan["fps_id"])
-        )
-
-        cursor.execute(
-            "UPDATE delivery_challans SET status = 'RECEIVED_AT_FPS', received_at = ? WHERE id = ?",
-            (now_iso, id)
-        )
-
-        if challan["indent_id"]:
-            cursor.execute(
-                "UPDATE fps_indents SET status = 'DELIVERED_TO_FPS' WHERE id = ?",
-                (challan["indent_id"],)
-            )
-
-        log_audit_event(
-            conn,
-            "FPS_EPOS_RECEIPT",
-            {
-                "challanNo": challan["challan_no"],
-                "fpsId": fps_store["fps_code"],
-                "fpsName": fps_store["shop_name"],
-                "commodity": comm,
-                "quantity": challan["total_qty"],
-                "receivedAt": now_iso
-            },
-            timestamp=now_iso
-        )
-
-        increment_state_version(conn)
-        conn.commit()
-
-        return {
-            "success": True,
-            "challan_id": id,
-            "status": "RECEIVED_AT_FPS",
-            "fps_code": fps_store["fps_code"],
-            "updated_fps_inventory": inventory
-        }
+        from backend.services import receive_challan_service
+        return receive_challan_service(conn, challan_id=id)
 
 @router.get("/{challan_no}/verify")
 def verify_challan_token(challan_no: str = Path(...)):
